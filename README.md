@@ -74,4 +74,4 @@ npm.cmd --prefix frontend run test:e2e
 | desktop | 数据路径、迁移、初始化与服务控制 |
 | packaging、scripts | Windows 安装包和开发工具 |
 
-项目源代码采用 [MIT](LICENSE)。实际使用的 shadcn/ui Dialog 与 21st.dev 收录的 Motion Primitives Animated Background 保留来源和许可，见 [第三方说明](THIRD_PARTY_NOTICES.md)。开发说明和答辩资料以实际代码为依据，AI 辅助开发不等于系统调用 AI 模型。
+项目由小组成员共同协作开发，源代码采用 [MIT](LICENSE)。实际使用的 shadcn/ui Dialog 与 21st.dev 收录的 Motion Primitives Animated Background 保留来源和许可，见 [第三方说明](THIRD_PARTY_NOTICES.md)。开发说明和答辩资料以实际代码和测试结果为依据。
