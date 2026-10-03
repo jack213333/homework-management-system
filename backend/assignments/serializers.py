@@ -136,3 +136,11 @@ class AssignmentSerializer(serializers.ModelSerializer):
         return (
             SubmissionSerializer(latest, context=self.context).data if latest else None
         )
+
+    def update(self, instance, validated_data):
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+        # Preserve independently maintained template_revision and timestamps
+        # even if a caller holds an older model instance.
+        instance.save(update_fields=[*validated_data, "updated_at"])
+        return instance

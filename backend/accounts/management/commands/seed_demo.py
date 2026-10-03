@@ -5,9 +5,11 @@ from classroom.models import Course, Enrollment
 
 
 class Command(BaseCommand):
-    help = "创建虚构演示账号；重复运行保留已有数据和密码"
+    help = "仅为空用户数据库创建虚构演示内容；已有业务数据保持不变"
 
     def handle(self, *args, **options):
+        if User.objects.exists():
+            return
         accounts = [
             ("admin", "演示管理员", "admin"),
             ("teacher", "陈老师", "teacher"),

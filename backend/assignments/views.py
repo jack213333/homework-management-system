@@ -1,6 +1,7 @@
 import uuid
 from pathlib import Path
 from django.conf import settings
+from django.db import transaction
 from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -54,6 +55,12 @@ class AssignmentViewSet(viewsets.ModelViewSet):
         require_course_access(self.request.user, serializer.instance.course, write=True)
         obj = serializer.save()
         audit(self.request.user, "assignment.update", obj)
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        # SQLite IMMEDIATE serializes the initial read, validation and write
+        # with submissions and template changes, rather than locking only save.
+        return super().update(request, *args, **kwargs)
 
     @action(detail=True, methods=["get", "post"])
     def submissions(self, request, pk=None):
@@ -122,22 +129,24 @@ class AssignmentViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
     def publish(self, request, pk=None):
         obj = self.get_object()
         require_course_access(request.user, obj.course, write=True)
         if obj.course.status != "active":
             raise ValidationError("课程已归档，不能发布作业")
         obj.status = "open"
-        obj.save()
+        obj.save(update_fields=["status", "updated_at"])
         audit(request.user, "assignment.publish", obj)
         return Response(self.get_serializer(obj).data)
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
     def close(self, request, pk=None):
         obj = self.get_object()
         require_course_access(request.user, obj.course, write=True)
         obj.status = "closed"
-        obj.save()
+        obj.save(update_fields=["status", "updated_at"])
         audit(request.user, "assignment.close", obj)
         return Response(self.get_serializer(obj).data)
 

@@ -56,13 +56,9 @@ def launch(
     from plagiarism.runner import interrupt_runs
 
     interrupt_runs()
-    # Seed is idempotent, and never resets an existing user's password.
-    from django.core.management import get_commands
+    from desktop.bootstrap import initialize_demo
 
-    if "seed_demo" in get_commands():
-        call_command("seed_demo", verbosity=0)
-        if initial_database:
-            call_command("load_demo_work", verbosity=0)
+    initialize_demo(paths, new_database=initial_database)
     server = create_server(
         get_wsgi_application(), host="127.0.0.1", port=port, threads=4
     )
