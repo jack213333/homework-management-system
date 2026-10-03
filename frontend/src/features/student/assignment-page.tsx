@@ -1,18 +1,334 @@
-import {useEffect,useState,useRef} from 'react'
-import {ArrowLeft,Download,FileText,Code2,Clock3,CheckCircle2,Upload} from 'lucide-react'
-import type {AssignmentDetail,SubmissionDetail,UserSummary} from '../../lib/contracts'
-import {api,listAll,message,upload} from '../../lib/api'
-import {GlassDialog} from '../../components/glass-dialog'
-import {GlassTextarea} from '../../components/glass-input'
-import {FileUpload} from '../../components/file-upload'
-import {date,Badge} from './dashboard-page'
-export function AssignmentPage({id,user,onRefresh}:{id:number;user:UserSummary;onRefresh:()=>Promise<void>}){
-  const [assignment,setAssignment]=useState<AssignmentDetail|null>(null),[history,setHistory]=useState<SubmissionDetail[]>([]),[open,setOpen]=useState(false),[reports,setReports]=useState<File[]>([]),[codes,setCodes]=useState<File[]>([]),[comment,setComment]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0)
-  useEffect(()=>{api<AssignmentDetail>(`/api/assignments/${id}/`).then(setAssignment).catch(e=>setError(message(e)));listAll<SubmissionDetail>(`/api/assignments/${id}/submissions/`).then(setHistory).catch(e=>setError(message(e)))},[id])
-  const requestId=useRef(crypto.randomUUID())
-  useEffect(()=>{requestId.current=crypto.randomUUID()},[reports,codes,comment])
-  async function submit(){if(!assignment)return;setError('');if(assignment.require_report&&!reports.length){setError('请上传至少一份报告');return}if(assignment.require_code&&!codes.length){setError('请上传至少一份代码');return}const files=[...reports,...codes];if(files.some(f=>f.size>20*1024*1024)){setError('单文件最多 20 MiB');return}if(files.length>20||files.reduce((n,f)=>n+f.size,0)>50*1024*1024){setError('单次最多 20 个文件、50 MiB');return}setBusy(true);setProgress(0);const data=new FormData();data.append('request_id',requestId.current);data.append('comment',comment);reports.forEach(f=>data.append('report_files',f));codes.forEach(f=>data.append('code_files',f));try{const result=await upload(`/api/assignments/${id}/submissions/`,data,setProgress);setHistory(h=>[result,...h]);setAssignment(a=>a?{...a,my_submission:result}:a);setNotice('提交成功，新版本已保存');setOpen(false);setReports([]);setCodes([]);setComment('');await onRefresh()}catch(e){setError(message(e))}finally{setBusy(false)}}
-  if(!assignment)return <div className="panel empty">{error||'正在加载作业…'}</div>
-  const student=user.role==='student',latest=assignment.my_submission,canSubmit=assignment.status==='open'&&(assignment.allow_late||new Date(assignment.deadline)>new Date())
-  return <><a className="back-link" href="/assignments"><ArrowLeft size={16}/>返回作业列表</a><div className="page-heading"><div><p className="eyebrow">{assignment.course_name}</p><h1>{assignment.title}</h1><p className="muted">{date(assignment.deadline)} 截止 · 满分 {assignment.total_score} 分</p></div>{student?<Badge assignment={assignment}/>:<span className="badge">{assignment.status}</span>}</div>{notice&&<p className="success" role="status"><CheckCircle2 size={17}/>{notice}</p>}{error&&!open&&<p className="error" role="alert">{error}</p>}<div className="assignment-detail-grid"><div><section className="panel details-panel"><div className="section-heading"><h2>作业要求</h2><FileText size={18}/></div><p className="description-text">{assignment.description||'请按课程要求完成报告与源码，提交前确认文件完整。'}</p><div className="requirement-grid"><div><FileText size={20}/><strong>实训报告</strong><span>{assignment.require_report?'必交':'选交'} · DOCX / PDF / TXT</span></div><div><Code2 size={20}/><strong>程序源码</strong><span>{assignment.require_code?'必交':'选交'} · PY / JAVA</span></div></div></section><section className="panel history-panel"><div className="section-heading"><h2>{student?'提交记录':'学生提交'}<span>{history.length}</span></h2><small>每次提交都保留完整版本</small></div>{!history.length?<div className="empty">{student?'你还没有提交这份作业。':'尚未收到学生提交。'}</div>:history.map(s=><div className="history-item" key={s.id}><div className="history-title"><strong>{student?`版本 v${s.version}`:`${s.student_name} · v${s.version}`}</strong><span>{date(s.submitted_at)}{s.is_late?' · 迟交':''}</span></div>{s.comment&&<p>{s.comment}</p>}<div className="attachment-list">{s.attachments.map(f=><a href={`/api/attachments/${f.id}/download/`} key={f.id} className="attachment-link"><FileText size={17}/><span>{f.original_name}<small>{(f.size_bytes/1024).toFixed(1)} KiB · {f.extraction_status==='ready'?'已提取文字':f.extraction_status==='partial'?'部分内容可检测':'需人工检查'}</small></span><Download size={16}/></a>)}</div>{s.grade?.published_at&&<div className="feedback-box"><strong>{s.grade.score} 分</strong><p>{s.grade.feedback||'老师已完成批改。'}</p><small>{s.grade.grader_name} · {date(s.grade.graded_at)}</small></div>}</div>)}</section></div><aside><section className="panel submission-status"><span className="eyebrow">当前状态</span><span className="status-orbit">{latest?<CheckCircle2 size={30}/>:<Upload size={30}/>}</span><h2>{latest?`已提交 · v${latest.version}`:'准备好，就提交吧'}</h2><p>{latest?'重交会生成新版本，旧文件与评分保留在历史记录中。':'请把你的思路写进报告，并附上可以运行的源码。'}</p>{student?<button className="button primary" disabled={!canSubmit} onClick={()=>{setError('');setOpen(true)}}>{latest?'提交新版本':'提交作业'}<ArrowLeft size={16} className="rotate-arrow"/></button>:<div className="teacher-actions"><a className="button primary" href={`/assignments/${id}/grading`}>批改作业</a><a className="button secondary" href={`/assignments/${id}/grades`}>成绩与统计</a><a className="button secondary" href={`/assignments/${id}/similarity`}>作业相似检测</a></div>}<div className="deadline-note"><Clock3 size={16}/>{assignment.allow_late?'允许迟交，迟交会被标记':'请在截止时间前完成提交'}</div></section></aside></div><GlassDialog open={open} onOpenChange={setOpen} title="提交作业" description="一次提交包含该版本全部文件。单次最多 20 个附件、50 MiB。" dirty={reports.length>0||codes.length>0||!!comment} busy={busy}><FileUpload kind="report" files={reports} onChange={setReports}/><FileUpload kind="code" files={codes} onChange={setCodes}/><label className="field-label" htmlFor="submission-comment">提交备注 <span>选填</span></label><GlassTextarea id="submission-comment" placeholder="想告诉老师的话，或需要说明的问题…" value={comment} onChange={e=>setComment(e.target.value)} maxLength={5000}/>{error&&<p className="error" role="alert">{error}</p>}{busy&&<div className="upload-progress"><div style={{width:`${progress}%`}}/><span>{progress===100?'文件已上传，正在保存与解析…':`上传中 ${progress}%`}</span></div>}<div className="dialog-footer"><span className="muted">提交后可在截止前再次重交</span><button className="button primary" onClick={submit} disabled={busy}>{busy?'正在提交…':'确认提交'}</button></div></GlassDialog></>
+import { useEffect, useState, useRef } from "react";
+import {
+  ArrowLeft,
+  Download,
+  FileText,
+  Code2,
+  Clock3,
+  CheckCircle2,
+  Upload,
+} from "lucide-react";
+import type {
+  AssignmentDetail,
+  SubmissionDetail,
+  UserSummary,
+} from "../../lib/contracts";
+import { api, listAll, message, upload } from "../../lib/api";
+import { GlassDialog } from "../../components/glass-dialog";
+import { GlassTextarea } from "../../components/glass-input";
+import { FileUpload } from "../../components/file-upload";
+import { date, Badge } from "./dashboard-page";
+export function AssignmentPage({
+  id,
+  user,
+  onRefresh,
+}: {
+  id: number;
+  user: UserSummary;
+  onRefresh: () => Promise<void>;
+}) {
+  const [assignment, setAssignment] = useState<AssignmentDetail | null>(null),
+    [history, setHistory] = useState<SubmissionDetail[]>([]),
+    [open, setOpen] = useState(false),
+    [reports, setReports] = useState<File[]>([]),
+    [codes, setCodes] = useState<File[]>([]),
+    [comment, setComment] = useState(""),
+    [error, setError] = useState(""),
+    [notice, setNotice] = useState(""),
+    [busy, setBusy] = useState(false),
+    [progress, setProgress] = useState(0);
+  useEffect(() => {
+    api<AssignmentDetail>(`/api/assignments/${id}/`)
+      .then(setAssignment)
+      .catch((e) => setError(message(e)));
+    listAll<SubmissionDetail>(`/api/assignments/${id}/submissions/`)
+      .then(setHistory)
+      .catch((e) => setError(message(e)));
+  }, [id]);
+  const requestId = useRef(crypto.randomUUID());
+  useEffect(() => {
+    requestId.current = crypto.randomUUID();
+  }, [reports, codes, comment]);
+  async function submit() {
+    if (!assignment) return;
+    setError("");
+    if (assignment.require_report && !reports.length) {
+      setError("请上传至少一份报告");
+      return;
+    }
+    if (assignment.require_code && !codes.length) {
+      setError("请上传至少一份代码");
+      return;
+    }
+    const files = [...reports, ...codes];
+    if (files.some((f) => f.size > 20 * 1024 * 1024)) {
+      setError("单文件最多 20 MiB");
+      return;
+    }
+    if (
+      files.length > 20 ||
+      files.reduce((n, f) => n + f.size, 0) > 50 * 1024 * 1024
+    ) {
+      setError("单次最多 20 个文件、50 MiB");
+      return;
+    }
+    setBusy(true);
+    setProgress(0);
+    const data = new FormData();
+    data.append("request_id", requestId.current);
+    data.append("comment", comment);
+    reports.forEach((f) => data.append("report_files", f));
+    codes.forEach((f) => data.append("code_files", f));
+    try {
+      const result = await upload(
+        `/api/assignments/${id}/submissions/`,
+        data,
+        setProgress,
+      );
+      setHistory((h) => [result, ...h]);
+      setAssignment((a) => (a ? { ...a, my_submission: result } : a));
+      setNotice("提交成功，新版本已保存");
+      setOpen(false);
+      setReports([]);
+      setCodes([]);
+      setComment("");
+      await onRefresh();
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (!assignment)
+    return <div className="panel empty">{error || "正在加载作业…"}</div>;
+  const student = user.role === "student",
+    latest = assignment.my_submission,
+    canSubmit =
+      assignment.status === "open" &&
+      (assignment.allow_late || new Date(assignment.deadline) > new Date());
+  return (
+    <>
+      <a className="back-link" href="/assignments">
+        <ArrowLeft size={16} />
+        返回作业列表
+      </a>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">{assignment.course_name}</p>
+          <h1>{assignment.title}</h1>
+          <p className="muted">
+            {date(assignment.deadline)} 截止 · 满分 {assignment.total_score} 分
+          </p>
+        </div>
+        {student ? (
+          <Badge assignment={assignment} />
+        ) : (
+          <span className="badge">{assignment.status}</span>
+        )}
+      </div>
+      {notice && (
+        <p className="success" role="status">
+          <CheckCircle2 size={17} />
+          {notice}
+        </p>
+      )}
+      {error && !open && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="assignment-detail-grid">
+        <div>
+          <section className="panel details-panel">
+            <div className="section-heading">
+              <h2>作业要求</h2>
+              <FileText size={18} />
+            </div>
+            <p className="description-text">
+              {assignment.description ||
+                "请按课程要求完成报告与源码，提交前确认文件完整。"}
+            </p>
+            <div className="requirement-grid">
+              <div>
+                <FileText size={20} />
+                <strong>实训报告</strong>
+                <span>
+                  {assignment.require_report ? "必交" : "选交"} · DOCX / PDF /
+                  TXT
+                </span>
+              </div>
+              <div>
+                <Code2 size={20} />
+                <strong>程序源码</strong>
+                <span>
+                  {assignment.require_code ? "必交" : "选交"} · PY / JAVA
+                </span>
+              </div>
+            </div>
+          </section>
+          <section className="panel history-panel">
+            <div className="section-heading">
+              <h2>
+                {student ? "提交记录" : "学生提交"}
+                <span>{history.length}</span>
+              </h2>
+              <small>每次提交都保留完整版本</small>
+            </div>
+            {!history.length ? (
+              <div className="empty">
+                {student ? "你还没有提交这份作业。" : "尚未收到学生提交。"}
+              </div>
+            ) : (
+              history.map((s) => (
+                <div className="history-item" key={s.id}>
+                  <div className="history-title">
+                    <strong>
+                      {student
+                        ? `版本 v${s.version}`
+                        : `${s.student_name} · v${s.version}`}
+                    </strong>
+                    <span>
+                      {date(s.submitted_at)}
+                      {s.is_late ? " · 迟交" : ""}
+                    </span>
+                  </div>
+                  {s.comment && <p>{s.comment}</p>}
+                  <div className="attachment-list">
+                    {s.attachments.map((f) => (
+                      <a
+                        href={`/api/attachments/${f.id}/download/`}
+                        key={f.id}
+                        className="attachment-link"
+                      >
+                        <FileText size={17} />
+                        <span>
+                          {f.original_name}
+                          <small>
+                            {(f.size_bytes / 1024).toFixed(1)} KiB ·{" "}
+                            {f.extraction_status === "ready"
+                              ? "已提取文字"
+                              : f.extraction_status === "partial"
+                                ? "部分内容可检测"
+                                : "需人工检查"}
+                          </small>
+                        </span>
+                        <Download size={16} />
+                      </a>
+                    ))}
+                  </div>
+                  {s.grade?.published_at && (
+                    <div className="feedback-box">
+                      <strong>{s.grade.score} 分</strong>
+                      <p>{s.grade.feedback || "老师已完成批改。"}</p>
+                      <small>
+                        {s.grade.grader_name} · {date(s.grade.graded_at)}
+                      </small>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </section>
+        </div>
+        <aside>
+          <section className="panel submission-status">
+            <span className="eyebrow">当前状态</span>
+            <span className="status-orbit">
+              {latest ? <CheckCircle2 size={30} /> : <Upload size={30} />}
+            </span>
+            <h2>
+              {latest ? `已提交 · v${latest.version}` : "准备好，就提交吧"}
+            </h2>
+            <p>
+              {latest
+                ? "重交会生成新版本，旧文件与评分保留在历史记录中。"
+                : "请把你的思路写进报告，并附上可以运行的源码。"}
+            </p>
+            {student ? (
+              <button
+                className="button primary"
+                disabled={!canSubmit}
+                onClick={() => {
+                  setError("");
+                  setOpen(true);
+                }}
+              >
+                {latest ? "提交新版本" : "提交作业"}
+                <ArrowLeft size={16} className="rotate-arrow" />
+              </button>
+            ) : (
+              <div className="teacher-actions">
+                <a
+                  className="button primary"
+                  href={`/assignments/${id}/grading`}
+                >
+                  批改作业
+                </a>
+                <a
+                  className="button secondary"
+                  href={`/assignments/${id}/grades`}
+                >
+                  成绩与统计
+                </a>
+                <a
+                  className="button secondary"
+                  href={`/assignments/${id}/similarity`}
+                >
+                  作业相似检测
+                </a>
+              </div>
+            )}
+            <div className="deadline-note">
+              <Clock3 size={16} />
+              {assignment.allow_late
+                ? "允许迟交，迟交会被标记"
+                : "请在截止时间前完成提交"}
+            </div>
+          </section>
+        </aside>
+      </div>
+      <GlassDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="提交作业"
+        description="一次提交包含该版本全部文件。单次最多 20 个附件、50 MiB。"
+        dirty={reports.length > 0 || codes.length > 0 || !!comment}
+        busy={busy}
+      >
+        <FileUpload kind="report" files={reports} onChange={setReports} />
+        <FileUpload kind="code" files={codes} onChange={setCodes} />
+        <label className="field-label" htmlFor="submission-comment">
+          提交备注 <span>选填</span>
+        </label>
+        <GlassTextarea
+          id="submission-comment"
+          placeholder="想告诉老师的话，或需要说明的问题…"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          maxLength={5000}
+        />
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+        {busy && (
+          <div className="upload-progress">
+            <div style={{ width: `${progress}%` }} />
+            <span>
+              {progress === 100
+                ? "文件已上传，正在保存与解析…"
+                : `上传中 ${progress}%`}
+            </span>
+          </div>
+        )}
+        <div className="dialog-footer">
+          <span className="muted">提交后可在截止前再次重交</span>
+          <button className="button primary" onClick={submit} disabled={busy}>
+            {busy ? "正在提交…" : "确认提交"}
+          </button>
+        </div>
+      </GlassDialog>
+    </>
+  );
 }

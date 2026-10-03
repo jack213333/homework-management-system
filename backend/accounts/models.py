@@ -1,11 +1,13 @@
 from django.contrib.auth.models import AbstractUser, Group
 from django.db import models
 
+
 class User(AbstractUser):
     class Role(models.TextChoices):
         ADMIN = "admin", "管理员"
         TEACHER = "teacher", "教师"
         STUDENT = "student", "学生"
+
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.STUDENT)
     display_name = models.CharField(max_length=80)
     student_number = models.CharField(max_length=40, blank=True)
@@ -14,6 +16,7 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
         group, _ = Group.objects.get_or_create(name=self.role)
         self.groups.set([group])
+
 
 class AuditEvent(models.Model):
     actor = models.ForeignKey(User, on_delete=models.PROTECT, null=True)

@@ -1,8 +1,144 @@
-import {BookOpen,LayoutDashboard,FolderOpen,ClipboardList,Users,LogOut,ChevronDown,Search,PanelLeftClose} from 'lucide-react'
-import type {ReactNode} from 'react'
-import type {UserSummary} from '../lib/contracts'
-export function AppShell({user,path,onLogout,children,search,onSearch}:{user:UserSummary;path:string;onLogout:()=>void;children:ReactNode;search:string;onSearch:(v:string)=>void}){
-  const student=user.role==='student',admin=user.role==='admin'
-  const nav=[{url:'/dashboard',label:'工作台',Icon:LayoutDashboard},{url:'/courses',label:student?'我的课程':'课程管理',Icon:FolderOpen},{url:'/assignments',label:student?'我的作业':'作业管理',Icon:ClipboardList},...(admin?[{url:'/admin/users',label:'账号与角色',Icon:Users}]:[])]
-  return <div className="app-layout"><aside className="sidebar"><a href="/dashboard" className="brand"><span className="brand-mark"><BookOpen size={23}/></span><span>课序<small>COURSEWORK</small></span></a><div className="workspace-select"><span className="workspace-icon">学</span><div><strong>教学工作空间</strong><small>2026 · 秋季学期</small></div><ChevronDown size={15}/></div><p className="nav-label">工作空间</p><nav>{nav.map(({url,label,Icon})=><a href={url} key={url} className={`nav-item ${path===url||(url==='/assignments'&&path.startsWith('/assignments/'))?'active':''}`}><Icon size={19}/>{label}</a>)}</nav><div className="sidebar-note"><span className="note-line"/><p>学习的每一步，<br/>都值得认真对待。</p><small>KEEP MAKING PROGRESS</small></div><div className="sidebar-bottom"><div className="local-mode"><span className="status-dot"/>本机服务运行中<PanelLeftClose size={16}/></div><button className="profile" onClick={onLogout} title="退出登录"><span className="avatar">{user.display_name.slice(-2)}</span><span><strong>{user.display_name}</strong><small>{student?'学生':admin?'管理员':'教师'}</small></span><LogOut size={16}/></button></div></aside><div className="workspace-main"><header className="topbar"><div className="breadcrumb">工作空间<span>/</span><strong>{nav.find(n=>path===n.url)?.label||'作业详情'}</strong></div><label className="search-box"><Search size={17}/><input aria-label="搜索课程或作业" placeholder="搜索课程或作业…" value={search} onChange={e=>onSearch(e.target.value)}/><kbd>搜索</kbd></label><span className="topbar-date">{new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'short'})}</span><button className="mobile-logout icon-button" aria-label="退出登录" onClick={onLogout}><LogOut size={17}/></button></header><main className="page-content">{children}</main><footer className="page-footer">课序 · 学习的每一步，有迹可循<span>本地工作空间</span></footer></div></div>
+import {
+  BookOpen,
+  LayoutDashboard,
+  FolderOpen,
+  ClipboardList,
+  Users,
+  LogOut,
+  ChevronDown,
+  Search,
+  PanelLeftClose,
+} from "lucide-react";
+import type { ReactNode } from "react";
+import type { UserSummary } from "../lib/contracts";
+export function AppShell({
+  user,
+  path,
+  onLogout,
+  children,
+  search,
+  onSearch,
+}: {
+  user: UserSummary;
+  path: string;
+  onLogout: () => void;
+  children: ReactNode;
+  search: string;
+  onSearch: (v: string) => void;
+}) {
+  const student = user.role === "student",
+    admin = user.role === "admin";
+  const nav = [
+    { url: "/dashboard", label: "工作台", Icon: LayoutDashboard },
+    {
+      url: "/courses",
+      label: student ? "我的课程" : "课程管理",
+      Icon: FolderOpen,
+    },
+    {
+      url: "/assignments",
+      label: student ? "我的作业" : "作业管理",
+      Icon: ClipboardList,
+    },
+    ...(admin
+      ? [{ url: "/admin/users", label: "账号与角色", Icon: Users }]
+      : []),
+  ];
+  return (
+    <div className="app-layout">
+      <aside className="sidebar">
+        <a href="/dashboard" className="brand">
+          <span className="brand-mark">
+            <BookOpen size={23} />
+          </span>
+          <span>
+            课序<small>COURSEWORK</small>
+          </span>
+        </a>
+        <div className="workspace-select">
+          <span className="workspace-icon">学</span>
+          <div>
+            <strong>教学工作空间</strong>
+            <small>2026 · 秋季学期</small>
+          </div>
+          <ChevronDown size={15} />
+        </div>
+        <p className="nav-label">工作空间</p>
+        <nav>
+          {nav.map(({ url, label, Icon }) => (
+            <a
+              href={url}
+              key={url}
+              className={`nav-item ${path === url || (url === "/assignments" && path.startsWith("/assignments/")) ? "active" : ""}`}
+            >
+              <Icon size={19} />
+              {label}
+            </a>
+          ))}
+        </nav>
+        <div className="sidebar-note">
+          <span className="note-line" />
+          <p>
+            学习的每一步，
+            <br />
+            都值得认真对待。
+          </p>
+          <small>KEEP MAKING PROGRESS</small>
+        </div>
+        <div className="sidebar-bottom">
+          <div className="local-mode">
+            <span className="status-dot" />
+            本机服务运行中
+            <PanelLeftClose size={16} />
+          </div>
+          <button className="profile" onClick={onLogout} title="退出登录">
+            <span className="avatar">{user.display_name.slice(-2)}</span>
+            <span>
+              <strong>{user.display_name}</strong>
+              <small>{student ? "学生" : admin ? "管理员" : "教师"}</small>
+            </span>
+            <LogOut size={16} />
+          </button>
+        </div>
+      </aside>
+      <div className="workspace-main">
+        <header className="topbar">
+          <div className="breadcrumb">
+            工作空间<span>/</span>
+            <strong>
+              {nav.find((n) => path === n.url)?.label || "作业详情"}
+            </strong>
+          </div>
+          <label className="search-box">
+            <Search size={17} />
+            <input
+              aria-label="搜索课程或作业"
+              placeholder="搜索课程或作业…"
+              value={search}
+              onChange={(e) => onSearch(e.target.value)}
+            />
+            <kbd>搜索</kbd>
+          </label>
+          <span className="topbar-date">
+            {new Date().toLocaleDateString("zh-CN", {
+              month: "long",
+              day: "numeric",
+              weekday: "short",
+            })}
+          </span>
+          <button
+            className="mobile-logout icon-button"
+            aria-label="退出登录"
+            onClick={onLogout}
+          >
+            <LogOut size={17} />
+          </button>
+        </header>
+        <main className="page-content">{children}</main>
+        <footer className="page-footer">
+          课序 · 学习的每一步，有迹可循<span>本地工作空间</span>
+        </footer>
+      </div>
+    </div>
+  );
 }

@@ -6,26 +6,51 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('assignments', '0001_initial'),
+        ("assignments", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Grade',
+            name="Grade",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('score', models.DecimalField(decimal_places=2, max_digits=6)),
-                ('feedback', models.TextField(blank=True)),
-                ('graded_at', models.DateTimeField(auto_now=True)),
-                ('published_at', models.DateTimeField(blank=True, null=True)),
-                ('grader', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='given_grades', to=settings.AUTH_USER_MODEL)),
-                ('submission', models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, related_name='grade', to='assignments.submission')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("score", models.DecimalField(decimal_places=2, max_digits=6)),
+                ("feedback", models.TextField(blank=True)),
+                ("graded_at", models.DateTimeField(auto_now=True)),
+                ("published_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "grader",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="given_grades",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "submission",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="grade",
+                        to="assignments.submission",
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.CheckConstraint(condition=models.Q(('score__gte', 0)), name='nonnegative_grade')],
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(("score__gte", 0)), name="nonnegative_grade"
+                    )
+                ],
             },
         ),
     ]

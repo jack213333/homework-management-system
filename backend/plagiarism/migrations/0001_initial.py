@@ -6,94 +6,216 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('assignments', '0002_grade'),
+        ("assignments", "0002_grade"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AssignmentTemplate',
+            name="AssignmentTemplate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('kind', models.CharField(choices=[('report', '报告'), ('code', '代码')], max_length=10)),
-                ('language', models.CharField(blank=True, max_length=10, null=True)),
-                ('original_name', models.CharField(max_length=240)),
-                ('storage_key', models.CharField(max_length=100, unique=True)),
-                ('sha256', models.CharField(max_length=64)),
-                ('extracted_text', models.TextField(blank=True)),
-                ('locations', models.JSONField(default=list)),
-                ('extraction_status', models.CharField(max_length=20)),
-                ('extraction_note', models.TextField(blank=True)),
-                ('revision', models.PositiveIntegerField()),
-                ('assignment', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='templates', to='assignments.assignment')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "kind",
+                    models.CharField(
+                        choices=[("report", "报告"), ("code", "代码")], max_length=10
+                    ),
+                ),
+                ("language", models.CharField(blank=True, max_length=10, null=True)),
+                ("original_name", models.CharField(max_length=240)),
+                ("storage_key", models.CharField(max_length=100, unique=True)),
+                ("sha256", models.CharField(max_length=64)),
+                ("extracted_text", models.TextField(blank=True)),
+                ("locations", models.JSONField(default=list)),
+                ("extraction_status", models.CharField(max_length=20)),
+                ("extraction_note", models.TextField(blank=True)),
+                ("revision", models.PositiveIntegerField()),
+                (
+                    "assignment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="templates",
+                        to="assignments.assignment",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='SimilarityPair',
+            name="SimilarityPair",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('mode', models.CharField(max_length=10)),
-                ('coverage_a', models.FloatField(blank=True, null=True)),
-                ('coverage_b', models.FloatField(blank=True, null=True)),
-                ('exact_duplicate', models.BooleanField(default=False)),
-                ('matches', models.JSONField(default=list)),
-                ('note', models.TextField(blank=True)),
-                ('attachment_a', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='pairs_a', to='assignments.attachment')),
-                ('attachment_b', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='pairs_b', to='assignments.attachment')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("mode", models.CharField(max_length=10)),
+                ("coverage_a", models.FloatField(blank=True, null=True)),
+                ("coverage_b", models.FloatField(blank=True, null=True)),
+                ("exact_duplicate", models.BooleanField(default=False)),
+                ("matches", models.JSONField(default=list)),
+                ("note", models.TextField(blank=True)),
+                (
+                    "attachment_a",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="pairs_a",
+                        to="assignments.attachment",
+                    ),
+                ),
+                (
+                    "attachment_b",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="pairs_b",
+                        to="assignments.attachment",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['id'],
+                "ordering": ["id"],
             },
         ),
         migrations.CreateModel(
-            name='SimilarityReview',
+            name="SimilarityReview",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('pending', '待复核'), ('cleared', '已排除'), ('follow_up', '需进一步核实')], default='pending', max_length=12)),
-                ('comment', models.TextField(blank=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('pair', models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, related_name='review', to='plagiarism.similaritypair')),
-                ('reviewer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "待复核"),
+                            ("cleared", "已排除"),
+                            ("follow_up", "需进一步核实"),
+                        ],
+                        default="pending",
+                        max_length=12,
+                    ),
+                ),
+                ("comment", models.TextField(blank=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "pair",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="review",
+                        to="plagiarism.similaritypair",
+                    ),
+                ),
+                (
+                    "reviewer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='SimilarityRun',
+            name="SimilarityRun",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('running', '检测中'), ('completed', '完成'), ('failed', '失败'), ('interrupted', '已中断')], max_length=20)),
-                ('submission_ids', models.JSONField(default=list)),
-                ('template_revision', models.PositiveIntegerField()),
-                ('algorithm_version', models.CharField(default='winnowing-v1', max_length=30)),
-                ('parameters', models.JSONField(default=dict)),
-                ('started_at', models.DateTimeField(auto_now_add=True)),
-                ('finished_at', models.DateTimeField(blank=True, null=True)),
-                ('error_message', models.TextField(blank=True)),
-                ('assignment', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='similarity_runs', to='assignments.assignment')),
-                ('requested_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("running", "检测中"),
+                            ("completed", "完成"),
+                            ("failed", "失败"),
+                            ("interrupted", "已中断"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("submission_ids", models.JSONField(default=list)),
+                ("template_revision", models.PositiveIntegerField()),
+                (
+                    "algorithm_version",
+                    models.CharField(default="winnowing-v1", max_length=30),
+                ),
+                ("parameters", models.JSONField(default=dict)),
+                ("started_at", models.DateTimeField(auto_now_add=True)),
+                ("finished_at", models.DateTimeField(blank=True, null=True)),
+                ("error_message", models.TextField(blank=True)),
+                (
+                    "assignment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="similarity_runs",
+                        to="assignments.assignment",
+                    ),
+                ),
+                (
+                    "requested_by",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-id'],
+                "ordering": ["-id"],
             },
         ),
         migrations.AddField(
-            model_name='similaritypair',
-            name='run',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='pairs', to='plagiarism.similarityrun'),
+            model_name="similaritypair",
+            name="run",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="pairs",
+                to="plagiarism.similarityrun",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='similarityrun',
-            constraint=models.UniqueConstraint(condition=models.Q(('status', 'running')), fields=('assignment',), name='one_running_similarity'),
+            model_name="similarityrun",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("status", "running")),
+                fields=("assignment",),
+                name="one_running_similarity",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='similaritypair',
-            constraint=models.UniqueConstraint(fields=('run', 'attachment_a', 'attachment_b'), name='unique_similarity_pair'),
+            model_name="similaritypair",
+            constraint=models.UniqueConstraint(
+                fields=("run", "attachment_a", "attachment_b"),
+                name="unique_similarity_pair",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='similaritypair',
-            constraint=models.CheckConstraint(condition=models.Q(('attachment_a__lt', models.F('attachment_b'))), name='ordered_similarity_pair'),
+            model_name="similaritypair",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("attachment_a__lt", models.F("attachment_b"))),
+                name="ordered_similarity_pair",
+            ),
         ),
     ]

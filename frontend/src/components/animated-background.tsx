@@ -1,7 +1,12 @@
-'use client';
+"use client";
 // Adapted from Julien Thibeaut's Motion Primitives; MIT notice in THIRD_PARTY_NOTICES.md.
-import { cn } from '../lib/utils';
-import { AnimatePresence, type Transition, motion, useReducedMotion } from 'motion/react';
+import { cn } from "../lib/utils";
+import {
+  AnimatePresence,
+  type Transition,
+  motion,
+  useReducedMotion,
+} from "motion/react";
 import {
   Children,
   cloneElement,
@@ -9,12 +14,11 @@ import {
   useEffect,
   useState,
   useId,
-} from 'react';
+} from "react";
 
 export type AnimatedBackgroundProps = {
   children:
-    | ReactElement<{ 'data-id': string }>[]
-    | ReactElement<{ 'data-id': string }>;
+    ReactElement<{ "data-id": string }>[] | ReactElement<{ "data-id": string }>;
   defaultValue?: string;
   onValueChange?: (newActiveId: string | null) => void;
   className?: string;
@@ -49,7 +53,7 @@ export function AnimatedBackground({
   }, [defaultValue]);
 
   return Children.map(children, (child: any, index) => {
-    const id = child.props['data-id'];
+    const id = child.props["data-id"];
 
     const interactionProps = enableHover
       ? {
@@ -64,8 +68,8 @@ export function AnimatedBackground({
       child,
       {
         key: index,
-        className: cn('relative inline-flex', child.props.className),
-        'data-checked': activeId === id ? 'true' : 'false',
+        className: cn("relative inline-flex", child.props.className),
+        "data-checked": activeId === id ? "true" : "false",
         ...interactionProps,
       },
       <>
@@ -73,8 +77,8 @@ export function AnimatedBackground({
           {activeId === id && (
             <motion.div
               layoutId={`background-${uniqueId}`}
-              className={cn('absolute inset-0', className)}
-              transition={reducedMotion ? {duration:0} : transition}
+              className={cn("absolute inset-0", className)}
+              transition={reducedMotion ? { duration: 0 } : transition}
               initial={{ opacity: defaultValue ? 1 : 0 }}
               animate={{
                 opacity: 1,
@@ -85,8 +89,8 @@ export function AnimatedBackground({
             />
           )}
         </AnimatePresence>
-        <div className='z-10'>{child.props.children}</div>
-      </>
+        <div className="z-10">{child.props.children}</div>
+      </>,
     );
   });
 }
