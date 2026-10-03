@@ -1,13 +1,14 @@
 from desktop.paths import resolve_paths
 from pathlib import Path
 import os
+import sys
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PATHS = resolve_paths()
 SECRET_KEY = PATHS.secret_path.read_text(encoding="utf-8")
 DEBUG = False
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "testserver"]
-INSTALLED_APPS = ["django.contrib.auth", "django.contrib.contenttypes", "django.contrib.sessions", "accounts", "classroom", "assignments", "rest_framework"]
+INSTALLED_APPS = ["django.contrib.auth", "django.contrib.contenttypes", "django.contrib.sessions", "accounts", "classroom", "assignments", "plagiarism", "rest_framework"]
 MIDDLEWARE = ["django.middleware.security.SecurityMiddleware", "whitenoise.middleware.WhiteNoiseMiddleware", "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware", "django.middleware.csrf.CsrfViewMiddleware", "django.contrib.auth.middleware.AuthenticationMiddleware"]
 DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": PATHS.database_path, "OPTIONS": {"timeout": 30, "transaction_mode":"IMMEDIATE"}}}
 AUTH_USER_MODEL = "accounts.User"
@@ -15,6 +16,7 @@ ROOT_URLCONF = "config.urls"
 STATIC_URL = "/assets/"
 STATIC_ROOT = PATHS.frontend_dist / "assets"
 WHITENOISE_ROOT = PATHS.frontend_dist
+WHITENOISE_AUTOREFRESH = not getattr(sys,"frozen",False)
 MEDIA_ROOT = PATHS.uploads_root
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Strict"

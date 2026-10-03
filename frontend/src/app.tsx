@@ -12,6 +12,8 @@ import {GradesPage} from './features/teacher/grades-page'
 import {TeacherAssignmentsPage} from './features/teacher/assignments-page'
 import {UsersPage} from './features/admin/users-page'
 import {CourseManagementPage} from './features/admin/courses-page'
+import {SimilarityPage} from './features/similarity/similarity-page'
+import {PairPage} from './features/similarity/pair-page'
 
 export default function App(){
   const [user,setUser]=useState<UserSummary|null>(null),[ready,setReady]=useState(false),[courses,setCourses]=useState<CourseSummary[]>([]),[assignments,setAssignments]=useState<AssignmentDetail[]>([]),[error,setError]=useState(''),[search,setSearch]=useState('')
@@ -26,8 +28,9 @@ export default function App(){
   const visibleAssignments=assignments.filter(a=>`${a.title}${a.course_name}`.toLowerCase().includes(search.toLowerCase()))
   let content:React.ReactNode
   const assignmentRoute=path.match(/^\/assignments\/(\d+)\/?$/),courseRoute=path.match(/^\/courses\/(\d+)\/?$/)
-  const teachingRoute=path.match(/^\/assignments\/(\d+)\/(grading|grades)$/)
-  if(teachingRoute)content=user.role==='student'?<div className="panel empty">此页面需要任课教师权限。</div>:teachingRoute[2]==='grading'?<GradingPage id={Number(teachingRoute[1])}/>:<GradesPage id={Number(teachingRoute[1])}/>
+  const teachingRoute=path.match(/^\/assignments\/(\d+)\/(grading|grades|similarity)$/),pairRoute=path.match(/^\/similarity-pairs\/(\d+)$/)
+  if(pairRoute)content=user.role==='student'?<div className="panel empty">此页面需要任课教师权限。</div>:<PairPage id={Number(pairRoute[1])}/>
+  else if(teachingRoute)content=user.role==='student'?<div className="panel empty">此页面需要任课教师权限。</div>:teachingRoute[2]==='grading'?<GradingPage id={Number(teachingRoute[1])}/>:teachingRoute[2]==='similarity'?<SimilarityPage id={Number(teachingRoute[1])}/>:<GradesPage id={Number(teachingRoute[1])}/>
   else if(path==='/admin/users')content=user.role==='admin'?<UsersPage search={search}/>:<div className="panel empty">此页面需要管理员权限。</div>
   else if(path==='/assignments'&&user.role!=='student')content=<TeacherAssignmentsPage assignments={visibleAssignments} courses={courses} onRefresh={refresh}/>
   else if(assignmentRoute)content=<AssignmentPage id={Number(assignmentRoute[1])} user={user} onRefresh={refresh}/>

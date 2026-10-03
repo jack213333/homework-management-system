@@ -42,6 +42,8 @@ def launch(data_dir: Path | None = None, port: int = 8765, open_browser: bool = 
     from django.core.wsgi import get_wsgi_application
     from waitress import create_server
     call_command("migrate", interactive=False, verbosity=0)
+    from plagiarism.runner import interrupt_runs
+    interrupt_runs()
     # Seed is idempotent, and never resets an existing user's password.
     from django.core.management import get_commands
     if "seed_demo" in get_commands():
