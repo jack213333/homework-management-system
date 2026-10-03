@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.superpowers/
+.env
+*.sqlite3*
+data/
+uploads/
+frontend/node_modules/
+frontend/dist/
+build/
+dist/
+artifacts/
+*.log
+frontend/test-results/
+frontend/playwright-report/
