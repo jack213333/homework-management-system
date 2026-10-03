@@ -1,0 +1,6 @@
+{
+  "name": "homework-workspace", "private": true, "version": "0.1.0", "type": "module",
+  "scripts": {"dev": "vite --host 127.0.0.1", "typecheck": "tsc --noEmit", "build": "tsc --noEmit && vite build", "test:e2e": "playwright test"},
+  "dependencies": {"react": "^19.1.0", "react-dom": "^19.1.0", "lucide-react": "^0.468.0", "@radix-ui/react-dialog": "^1.1.6", "clsx": "^2.1.1", "tailwind-merge": "^3.0.0"},
+  "devDependencies": {"@types/react": "^19.1.0", "@types/react-dom": "^19.1.0", "typescript": "^5.8.3", "vite": "^7.0.0", "@vitejs/plugin-react": "^5.0.0", "tailwindcss": "^4.1.0", "@tailwindcss/vite": "^4.1.0", "@playwright/test": "^1.56.0"}
+}

@@ -1,0 +1,1 @@
+export default function App(){return <main className="bootstrap"><p className="eyebrow">COURSEWORK / LOCAL WORKSPACE</p><h1>课序</h1><p>让每一次提交，<br/>都有清晰的回应。</p><div className="glass"><h2>电子作业管理系统</h2><p>本机服务已就绪。正在建立账号与课程功能。</p></div></main>}
