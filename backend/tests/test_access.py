@@ -17,6 +17,12 @@ def test_seed_demo_preserves_password_and_relationships(db):
     assert user.check_password("changed-password")
     assert (User.objects.count(),Course.objects.count(),Enrollment.objects.count()) == counts
 
+def test_seed_demo_without_console(db, monkeypatch):
+    import sys
+    from django.core.management import call_command
+    monkeypatch.setattr(sys,"stdout",None)
+    call_command("seed_demo",verbosity=0)
+
 def test_student_cannot_change_role(client, student, teacher):
     client.force_login(student)
     r = client.patch(f"/api/users/{teacher.id}/", {"role":"admin"}, format="json")

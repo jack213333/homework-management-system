@@ -27,3 +27,15 @@ def course(teacher, student):
     course=Course.objects.create(code="TEST001",name="测试课程",teacher=teacher)
     Enrollment.objects.create(course=course,student=student)
     return course
+
+@pytest.fixture
+def assignment(course):
+    from assignments.models import Assignment
+    from django.utils import timezone
+    from datetime import timedelta
+    return Assignment.objects.create(course=course,title="测试作业",status="open",deadline=timezone.now()+timedelta(days=1))
+
+@pytest.fixture(autouse=True)
+def isolated_uploads(settings, tmp_path):
+    settings.MEDIA_ROOT=tmp_path / "uploads"
+    settings.MEDIA_ROOT.mkdir()

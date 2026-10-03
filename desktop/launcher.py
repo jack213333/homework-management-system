@@ -11,6 +11,13 @@ import webbrowser
 from desktop.paths import resolve_paths
 
 def launch(data_dir: Path | None = None, port: int = 8765, open_browser: bool = True) -> int:
+    paths = resolve_paths(data_dir)
+    # Windowed PyInstaller executables have no stdout/stderr. Keep diagnostics
+    # in the persistent data directory so startup errors remain inspectable.
+    if sys.stdout is None or sys.stderr is None:
+        log = (paths.data_root / "startup.log").open("a", encoding="utf-8")
+        if sys.stdout is None: sys.stdout = log
+        if sys.stderr is None: sys.stderr = log
     url = f"http://127.0.0.1:{port}"
     # Inspect occupied ports; never terminate an unrelated process.
     with socket.socket() as probe:
@@ -26,7 +33,6 @@ def launch(data_dir: Path | None = None, port: int = 8765, open_browser: bool = 
                 return 0
             print(f"端口 {port} 已被其他程序占用，请改用 --port。", file=sys.stderr)
             return 2
-    paths = resolve_paths(data_dir)
     os.environ["HOMEWORK_DATA_DIR"] = str(paths.data_root)
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
     sys.path.insert(0, str(paths.resource_root / "backend"))
