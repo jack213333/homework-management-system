@@ -5,6 +5,7 @@ import "./styles.css";
 import "./palette.css";
 import "./similarity.css";
 import "./dashboard.css";
+import "./photos.css";
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

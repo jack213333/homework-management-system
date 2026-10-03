@@ -1,18 +1,16 @@
 import { useState } from "react";
-import {
-  ArrowUpRight,
-  ArrowRight,
-  BookOpen,
-  FileText,
-  Clock3,
-  CheckCircle2,
-} from "lucide-react";
+import { ArrowUpRight, ArrowRight, Clock3, CheckCircle2 } from "lucide-react";
 import type {
   AssignmentDetail,
   CourseSummary,
   UserSummary,
 } from "../../lib/contracts";
 import { AnimatedBackground } from "../../components/animated-background";
+import {
+  CourseAvatar,
+  CoursePhoto,
+  coursePhoto,
+} from "../../components/photo-assets";
 export function date(value: string) {
   return new Date(value).toLocaleString("zh-CN", {
     month: "2-digit",
@@ -49,9 +47,10 @@ export function AssignmentRow({
 }) {
   return (
     <div className="assignment-row">
-      <span className="row-icon">
-        <FileText size={20} />
-      </span>
+      <CourseAvatar
+        name={assignment.course_name}
+        code={assignment.course_code}
+      />
       <div className="assignment-row-copy">
         <small>{assignment.course_name}</small>
         <h3>{assignment.title}</h3>
@@ -281,15 +280,16 @@ export function DashboardPage({
               <ArrowUpRight size={17} />
             </a>
           </div>
-          {courses.map((c, i) => (
+          {courses.map((c) => (
             <a
-              className={`desk-course desk-course-${i % 3}`}
+              className={`desk-course photo-course course-photo-${coursePhoto(c.name, c.code).kind}`}
+              style={coursePhoto(c.name, c.code).style}
               href={`/courses/${c.id}`}
               key={c.id}
             >
+              <CoursePhoto name={c.name} code={c.code} />
               <div className="desk-course-top">
                 <span>{c.code}</span>
-                <BookOpen size={19} />
               </div>
               <h3>{c.name}</h3>
               <p>

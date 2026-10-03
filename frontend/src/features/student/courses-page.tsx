@@ -1,5 +1,6 @@
-import { ArrowUpRight, BookOpen, Users } from "lucide-react";
+import { ArrowUpRight, Users } from "lucide-react";
 import type { CourseSummary } from "../../lib/contracts";
+import { CoursePhoto, coursePhoto } from "../../components/photo-assets";
 export function CoursesPage({ courses }: { courses: CourseSummary[] }) {
   return (
     <>
@@ -14,10 +15,12 @@ export function CoursesPage({ courses }: { courses: CourseSummary[] }) {
       <div className="course-grid">
         {courses.map((c, i) => (
           <article className="course-card" key={c.id}>
-            <div className="course-art">
+            <div
+              className="course-art photo-course-art"
+              style={coursePhoto(c.name, c.code).style}
+            >
+              <CoursePhoto name={c.name} code={c.code} />
               <span>COURSE / {String(i + 1).padStart(2, "0")}</span>
-              <BookOpen size={48} />
-              <div className="course-art-lines" />
             </div>
             <div className="course-card-body">
               <div className="course-code">

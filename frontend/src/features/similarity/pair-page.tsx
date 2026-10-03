@@ -5,6 +5,7 @@ import { GlassTextarea } from "../../components/glass-input";
 import { GlassSelect } from "../../components/glass-select";
 import type { Pair, Review } from "./contracts";
 import { percent } from "./contracts";
+import { UserAvatar } from "../../components/photo-assets";
 export function PairPage({ id }: { id: number }) {
   const [pair, setPair] = useState<Pair | null>(null),
     [status, setStatus] = useState<Review["status"]>("pending"),
@@ -78,11 +79,10 @@ export function PairPage({ id }: { id: number }) {
         {([pair.attachment_a, pair.attachment_b] as const).map((file, i) => (
           <section className="panel pair-head" key={file.id}>
             <div>
-              <span
-                className={`avatar ${i ? "sage-avatar" : "lavender-avatar"}`}
-              >
-                {file.student_name.slice(-2)}
-              </span>
+              <UserAvatar
+                name={file.student_name}
+                className={i ? "sage-avatar" : "lavender-avatar"}
+              />
               <div>
                 <h2>
                   {file.student_name}

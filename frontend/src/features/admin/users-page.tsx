@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Users, KeyRound, CheckCircle2 } from "lucide-react";
 import type { UserSummary } from "../../lib/contracts";
+import { UserAvatar } from "../../components/photo-assets";
 import { api, listAll, message } from "../../lib/api";
 import { GlassDialog } from "../../components/glass-dialog";
 import { GlassInput } from "../../components/glass-input";
@@ -168,9 +169,11 @@ export function UsersPage({ search }: { search: string }) {
                 <tr key={user.id}>
                   <td>
                     <div className="user-cell">
-                      <span className="avatar">
-                        {user.display_name.slice(-2)}
-                      </span>
+                      <UserAvatar
+                        name={user.display_name}
+                        username={user.username}
+                        role={user.role}
+                      />
                       <strong>{user.display_name}</strong>
                     </div>
                   </td>

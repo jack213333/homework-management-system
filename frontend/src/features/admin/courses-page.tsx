@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CourseAvatar, UserAvatar } from "../../components/photo-assets";
 import { Plus, Users, BookOpen } from "lucide-react";
 import { api, listAll, message } from "../../lib/api";
 import type { CourseSummary, UserSummary } from "../../lib/contracts";
@@ -199,9 +200,12 @@ export function CourseManagementPage({
               {courses.map((c) => (
                 <tr key={c.id}>
                   <td>
-                    <a href={`/courses/${c.id}`}>
-                      <strong>{c.name}</strong>
-                      <small>{c.code}</small>
+                    <a className="course-cell" href={`/courses/${c.id}`}>
+                      <CourseAvatar name={c.name} code={c.code} />
+                      <span>
+                        <strong>{c.name}</strong>
+                        <small>{c.code}</small>
+                      </span>
                     </a>
                   </td>
                   <td>{c.teacher_name}</td>
@@ -356,7 +360,7 @@ export function CourseManagementPage({
         <div className="member-list">
           {members.map((m) => (
             <div key={m.id}>
-              <span className="avatar">{m.display_name.slice(-2)}</span>
+              <UserAvatar name={m.display_name} username={m.username} />
               <span>
                 {m.display_name}
                 <small>{m.username}</small>

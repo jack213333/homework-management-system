@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, FileText, ArrowUpRight } from "lucide-react";
+import { Plus, ArrowUpRight } from "lucide-react";
+import { CourseAvatar } from "../../components/photo-assets";
 import { api, message } from "../../lib/api";
 import type { AssignmentDetail, CourseSummary } from "../../lib/contracts";
 import { GlassDialog } from "../../components/glass-dialog";
@@ -142,9 +143,7 @@ export function TeacherAssignmentsPage({
         </div>
         {assignments.map((a) => (
           <div className="teacher-assignment-row" key={a.id}>
-            <span className="row-icon">
-              <FileText size={21} />
-            </span>
+            <CourseAvatar name={a.course_name} code={a.course_code} />
             <div>
               <small>{a.course_name}</small>
               <a href={`/assignments/${a.id}`}>

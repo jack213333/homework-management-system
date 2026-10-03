@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { UserAvatar } from "../../components/photo-assets";
 import { ArrowLeft, Download, FileText, CheckCircle2 } from "lucide-react";
 import { api, listAll, message } from "../../lib/api";
 import type {
@@ -124,7 +125,7 @@ export function GradingPage({ id }: { id: number }) {
               key={s.id}
               onClick={() => setSelected(s.id)}
             >
-              <span className="avatar">{s.student_name.slice(-2)}</span>
+              <UserAvatar name={s.student_name} />
               <span>
                 <strong>{s.student_name}</strong>
                 <small>

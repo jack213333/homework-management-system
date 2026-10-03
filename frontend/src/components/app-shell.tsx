@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { UserSummary } from "../lib/contracts";
+import { UserAvatar } from "./photo-assets";
 export function AppShell({
   user,
   path,
@@ -92,7 +93,11 @@ export function AppShell({
             <PanelLeftClose size={16} />
           </div>
           <button className="profile" onClick={onLogout} title="退出登录">
-            <span className="avatar">{user.display_name.slice(-2)}</span>
+            <UserAvatar
+              name={user.display_name}
+              username={user.username}
+              role={user.role}
+            />
             <span>
               <strong>{user.display_name}</strong>
               <small>{student ? "学生" : admin ? "管理员" : "教师"}</small>
