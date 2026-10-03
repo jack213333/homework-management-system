@@ -45,6 +45,8 @@ def logout_view(request):
 
 @api_view(["POST"])
 def change_password(request):
+    if not isinstance(request.data.get('old_password'), str) or not isinstance(request.data.get('new_password'), str):
+        raise ValidationError('请输入正确的原密码与新密码')
     if not request.user.check_password(request.data.get("old_password", "")):
         raise ValidationError("原密码不正确")
     password = request.data.get("new_password", "")
@@ -65,6 +67,9 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     http_method_names = ["get","post","patch","head","options"]
     queryset = User.objects.all().order_by("id")
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        return super().update(request,*args,**kwargs)
     def get_queryset(self):
         qs = super().get_queryset()
         if self.request.query_params.get("role"):
@@ -83,6 +88,8 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="reset-password")
     def reset_password(self, request, pk=None):
         user=self.get_object(); password=request.data.get("new_password", "")
+        if not isinstance(password, str):
+            raise ValidationError('请输入正确的新密码')
         validate_password(password,user)
         user.set_password(password);user.save()
         audit(request.user,"user.reset_password",user)

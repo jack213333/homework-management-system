@@ -45,3 +45,13 @@ class Attachment(models.Model):
     extracted_text=models.TextField(blank=True)
     locations=models.JSONField(default=list)
     extraction_note=models.TextField(blank=True)
+
+class Grade(models.Model):
+    submission=models.OneToOneField(Submission,on_delete=models.PROTECT,related_name="grade")
+    grader=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,related_name="given_grades")
+    score=models.DecimalField(max_digits=6,decimal_places=2)
+    feedback=models.TextField(blank=True)
+    graded_at=models.DateTimeField(auto_now=True)
+    published_at=models.DateTimeField(null=True,blank=True)
+    class Meta:
+        constraints=[models.CheckConstraint(condition=Q(score__gte=0),name="nonnegative_grade")]

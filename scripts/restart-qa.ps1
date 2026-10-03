@@ -14,4 +14,10 @@ if(Test-Path -LiteralPath $pidFile){
 New-Item -ItemType Directory -Force -Path "$root\artifacts" | Out-Null
 $child=Start-Process -FilePath "$root\.venv\Scripts\python.exe" -ArgumentList '-m','desktop.launcher','--no-browser','--port',"$Port",'--data-dir','data' -WorkingDirectory $root -WindowStyle Hidden -PassThru -RedirectStandardOutput "$root\artifacts\server-qa.log" -RedirectStandardError "$root\artifacts\server-qa-error.log"
 Set-Content -LiteralPath $pidFile -Value $child.Id
+$ready=$false
+for($attempt=0;$attempt -lt 30;$attempt++){
+  try{if((Invoke-RestMethod "http://127.0.0.1:$Port/api/health/" -TimeoutSec 1).status -eq 'ok'){$ready=$true;break}}catch{}
+  Start-Sleep -Milliseconds 300
+}
+if(-not $ready){throw 'QA service did not become healthy; inspect artifacts/server-qa-error.log'}
 Write-Output "QA service started: PID $($child.Id), port $Port"

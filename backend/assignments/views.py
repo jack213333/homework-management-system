@@ -1,7 +1,7 @@
 import uuid
 from pathlib import Path
 from django.conf import settings
-from django.http import FileResponse
+from django.http import FileResponse,HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import action,api_view
@@ -12,6 +12,8 @@ from common.permissions import visible_courses,require_course_access
 from .models import Assignment,Submission,Attachment
 from .serializers import AssignmentSerializer,SubmissionSerializer
 from .submissions import create_submission
+from .grading import save_grade,publish_grades,unpublish_grades,latest_submissions
+from .statistics import assignment_statistics,grade_rows,export_grades_csv
 
 def visible_assignments(user):
     qs=Assignment.objects.filter(course__in=visible_courses(user)).select_related("course")
@@ -46,10 +48,54 @@ class AssignmentViewSet(viewsets.ModelViewSet):
         except (ValueError,TypeError):raise ValidationError("请提供有效的提交请求编号")
         submission=create_submission(actor=request.user,assignment=assignment,request_id=key,comment=str(request.data.get("comment","")),report_files=request.FILES.getlist("report_files"),code_files=request.FILES.getlist("code_files"))
         return Response(SubmissionSerializer(submission,context={"request":request}).data,status=201)
+    @action(detail=True,methods=["get"])
+    def statistics(self,request,pk=None):
+        obj=self.get_object();require_course_access(request.user,obj.course,write=True)
+        return Response(assignment_statistics(obj))
+    @action(detail=True,methods=["get"])
+    def grades(self,request,pk=None):
+        obj=self.get_object()
+        if request.user.role=="student":
+            qs=latest_submissions(obj).filter(student=request.user,grade__published_at__isnull=False)
+            return Response(SubmissionSerializer(qs,many=True,context={"request":request}).data)
+        return Response(grade_rows(obj))
+    @action(detail=True,methods=["post"],url_path="grades/publish")
+    def grades_publish(self,request,pk=None):
+        count=publish_grades(actor=request.user,assignment=self.get_object())
+        return Response({"published_count":count})
+    @action(detail=True,methods=["post"],url_path="grades/unpublish")
+    def grades_unpublish(self,request,pk=None):
+        count=unpublish_grades(actor=request.user,assignment=self.get_object())
+        return Response({"unpublished_count":count})
+    @action(detail=True,methods=["get"],url_path="grades/export")
+    def grades_export(self,request,pk=None):
+        obj=self.get_object();require_course_access(request.user,obj.course,write=True)
+        return HttpResponse(export_grades_csv(obj),content_type="text/csv; charset=utf-8",headers={"Content-Disposition":f'attachment; filename="assignment-{obj.pk}-grades.csv"'})
+    @action(detail=True,methods=["post"])
+    def publish(self,request,pk=None):
+        obj=self.get_object();require_course_access(request.user,obj.course,write=True)
+        if obj.course.status!="active":raise ValidationError("课程已归档，不能发布作业")
+        obj.status="open";obj.save();audit(request.user,"assignment.publish",obj)
+        return Response(self.get_serializer(obj).data)
+    @action(detail=True,methods=["post"])
+    def close(self,request,pk=None):
+        obj=self.get_object();require_course_access(request.user,obj.course,write=True)
+        obj.status="closed";obj.save();audit(request.user,"assignment.close",obj)
+        return Response(self.get_serializer(obj).data)
 
 class SubmissionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class=SubmissionSerializer
     def get_queryset(self):return visible_submissions(self.request.user)
+    @action(detail=True,methods=["put"])
+    def grade(self,request,pk=None):
+        from rest_framework import serializers
+        class GradeInput(serializers.Serializer):
+            score=serializers.DecimalField(max_digits=6,decimal_places=2,min_value=0)
+            feedback=serializers.CharField(allow_blank=True,required=False,max_length=5000,default="")
+        serializer=GradeInput(data=request.data);serializer.is_valid(raise_exception=True)
+        obj=self.get_object();save_grade(actor=request.user,submission=obj,**serializer.validated_data)
+        obj=visible_submissions(request.user).get(pk=obj.pk)
+        return Response(SubmissionSerializer(obj,context={"request":request}).data)
 
 def accessible_attachment(request,pk):
     return get_object_or_404(Attachment,pk=pk,submission__in=visible_submissions(request.user))

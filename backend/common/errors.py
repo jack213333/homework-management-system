@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import APIException
+from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class Conflict(APIException):
     status_code = 409
@@ -13,6 +15,8 @@ class TooLarge(APIException):
     default_code = "too_large"
 
 def api_exception_handler(exc, context):
+    if isinstance(exc, DjangoValidationError):
+        exc = ValidationError(exc.messages)
     response = exception_handler(exc, context)
     if response is not None:
         details = response.data
